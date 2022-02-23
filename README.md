@@ -1,2 +1,2 @@
 # Scraping-Data-ZipCodes
-Scarping Data from CarGuru url for all zipcodes
+Scarping Data from a url for all zipcodes
