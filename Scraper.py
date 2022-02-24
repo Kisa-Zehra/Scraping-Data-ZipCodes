@@ -1,27 +1,39 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
+from multiprocessing import cpu_count, Pool
 import pandas as pd
+# import threading
+import logging
+import time
+
+# import concurrent.futures
+
+MAX_THREADS = 10
+
+logger = logging.getLogger()
 
 zip_codes = pd.read_csv("zipcode.csv")
 # print(zip_codes)
 
-# for row in zip_codes[['zip']].iterrows():
-#     res = str(row[1].values)[1:-1]
-#     url = f'https://www.cargurus.com/Cars/inventorylisting/viewDetailsFilterViewInventoryListing.action?zip={res}&distance=100'
-#     print(url)
 
-#   https://www.cargurus.com/Cars/dl.action?entityId=&address=Los+Angeles%2C+CA+90001&latitude=33.96979&longitude=-118.24682&distance=100
 
-# https://www.cargurus.com/Cars/dl.action?entityId=&address=LosAngeles+CA+90001&latitude=33.96979&longitude=-118.24682&distance=100
-
-for ind,row in zip_codes.iterrows():
-  url = f"https://www.cargurus.com/Cars/dl.action?entityId=&address={row['city_slug']}+{row['state_id']}+{row['zip']}&latitude={row['lat']}&longitude={row['log']}&distance=100"
   #print(url)
+  # print(url)
 
-url = "https://www.cargurus.com/Cars/dl.action?entityId=&address=castaner+PR+631&latitude=18.1856&longitude=-66.8333&distance=100"
+# def generate_urls():
+#     all_urls = []
+#     for x,row in zip_codes.iterrows():
+#       dealers_url = "https://www.cargurus.com/Cars/dl.action?entityId=&address={}+{}+{}&latitude={}&longitude={}&distance=100".format(row['city_slug'],row['state_id'],row['zip'],row['lat'],row['log'])
+        
+#       all_urls.append(dealers_url)
+#     return all_urls
+
 
 def get_driver():
+  logger.info("Initializing driver creation")
+  # urls = generate_urls(generate_urls())
+  
   chrome_options = Options()
   chrome_options.add_argument('--no-sandbox')
   chrome_options.add_argument('--headless')
@@ -30,9 +42,16 @@ def get_driver():
   driver = webdriver.Chrome(options = chrome_options)
 
   driver.get(url)
+
+  logger.info("Completed driver creation")
+  
   return driver
 
 def get_dealer(driver):
+
+  logger.info("Getting all the dealers")
+  # urls = generate_urls(generate_urls())
+  
   
   DEALER_DIV_CLASS = 'blade'
 
@@ -40,40 +59,94 @@ def get_dealer(driver):
   
   dealer = driver.find_elements(By.CLASS_NAME,DEALER_DIV_CLASS)
 
+  logger.info("Completed all dealers")
+
   return dealer
 
 
 def parse_dealer(dealer):
+
+  logger.info("Getting dealers details")
+  
   name_tag = dealer.find_element(By.CLASS_NAME, 'details')
   dealer_name = name_tag.text
   
   url_tag = dealer.find_element(By.TAG_NAME,'a')
   url = url_tag.get_attribute('href')
 
+  # add_tag = dealer.find_element(By.TAG_NAME, 'span')
+  address = dealer.find_element(By.CLASS_NAME, 'address').text
+
+  # address = driver.find_elements(By.XPATH, "//span[(text()='Carr #2 Km 82 Hm 2, Arecibo, PR 00614(18 mi)')]")
+
+  logger.info("Complete dealers details")
 
   return{
     'dealer name': dealer_name,
-    'url': url
+    'url': url,
+    'address' : address
   }
 
 
 if __name__=="__main__":
+
+  start_time = time.time()
+
+  
+  
+  for ind,row in zip_codes.iterrows():
+    url = f"""https://www.cargurus.com/Cars/dl.action?entityId=&address={row['city_slug']}+{row['state_id']}+{row['zip']}&latitude={row['lat']}&longitude={row['log']}&distance=100"""
+
+  
+  
+  # url = "https://www.cargurus.com/Cars/dl.action?entityId=&address=castaner+PR+631&latitude=18.1856&longitude=-66.8333&distance=100"
+
+
+
+  print('\n\t Total time taken:', time.time()-start_time)
+  
   print("Creating driver")
   driver = get_driver()
 
+
+  # print("multi process start")
+  # url = generate_urls()
+  # p = Pool(20)
+  # result = p.map(parse_dealer, url)
+  # p.close()
+  # p.join()
+  # print("multi process over")
+  
+
   print("Fetching dealer")
   dealers = get_dealer(driver)
+  print("finished fetching dealer")
 
   print(f'Found {len(dealers)} dealer')
+  print("finished length dealer")
+  
 
-  print('Parsing dealers')
-
+  print("Parsing dealers")
   dealer_data =[parse_dealer(dealer) for dealer in dealers]
-
   print(dealer_data)
+  print("finished dealer details")
 
-
+  
+  print("Creating CSV of all dealer details")
   print('Save the data in CSV')
   dealers_df = pd.DataFrame(dealer_data)
   print(dealers_df)
   dealers_df.to_csv('dealer.csv', index=None)
+
+  # ThreadPool(5).map(dealers,dealer_data)  
+  
+  # count = 5
+  # for i in range(count):
+  #   driverThread = threading.Thread(target=parse_dealer)
+
+  # print("thread start")
+
+  # with Pool(cpu_count()) as p:
+  #   p.map(parse_dealer,url)
+    
+  # print("thread over")
