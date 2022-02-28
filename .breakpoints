@@ -1,3 +1,12 @@
 {
-  "files": {}
+  "files": {
+    "Scraper.py": [
+      {
+        "id": "7287aa28-4a33-47e0-9c9a-992728bfeaae",
+        "line": 93,
+        "version": 3267,
+        "index": 2491
+      }
+    ]
+  }
 }

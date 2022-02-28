@@ -105,20 +105,20 @@ if __name__=="__main__":
   # print("multi process over")
 
 
-  print(1)
+
   all_urls = []
   for x,row in zip_codes.iterrows():
     dealers_url = "https://www.cargurus.com/Cars/dl.action?entityId=&address={}+{}+{}&latitude={}&longitude={}&distance=100".format(row['city_slug'],row['state_id'],row['zip'],row['lat'],row['log'])
         
     url = all_urls.append(dealers_url)
 
-  p = Pool(20)
-  result = p.map(parse_dealer, url)
-  p.close()
-  p.join()
-  print(2)
-  print(url)
-  print(3)
+  # p = Pool(20)
+  # result = p.map(parse_dealer, url)
+  # p.close()
+  # p.join()
+  # print(2)
+  # print(url)
+  # print(3)
   
 
   print("Fetching dealer")
